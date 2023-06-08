@@ -1,3 +1,22 @@
+# TODOS
+*_TODO.py
+
+# VSCode specific
+.vscode/
+
+# reports related to durations
+reports/durations*
+
+# notebooks
+notebooks/*.ipynb
+
+# Codes only for reference
+ref_code/
+
+# Data
+data/raw/*
+!data/raw/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

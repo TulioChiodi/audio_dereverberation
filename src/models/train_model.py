@@ -62,9 +62,9 @@ def main(args):
     paths = get_data_path(args.dataset_name, args.data_dir)
     dataset_rootdir, tr_metadata_filepath, val_metadata_filepath, test_metadata_filepath = paths
     # Build dataset
-    tr_dataset = AudioDataset(dataset_rootdir, tr_metadata_filepath)
-    val_dataset = AudioDataset(dataset_rootdir, val_metadata_filepath)
-    test_dataset = AudioDataset(dataset_rootdir, test_metadata_filepath)
+    tr_dataset = AudioDataset(dataset_rootdir, tr_metadata_filepath, sample_rate=args.sr)
+    val_dataset = AudioDataset(dataset_rootdir, val_metadata_filepath, sample_rate=args.sr)
+    test_dataset = AudioDataset(dataset_rootdir, test_metadata_filepath, sample_rate=args.sr)
     # Build data loader from dataset
     tr_data = utils.DataLoader(tr_dataset, args.batch_size, shuffle=True, pin_memory=True)
     val_data = utils.DataLoader(val_dataset, args.batch_size, shuffle=False, pin_memory=True)
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=4,
                         help="Batch size")
-    parser.add_argument('--sr', type=int, default=16000,
+    parser.add_argument('--sr', type=int, default=48_000,
                         help="Sampling rate")
     parser.add_argument('--patience', type=int, default=50,
                         help="Patience for early stopping on validation set")

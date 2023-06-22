@@ -17,11 +17,11 @@ Miscellaneous utilities
 '''
 
 class AudioDataset(Dataset):
-    def __init__(self, dataset_rootdir, metadata_filepath, sample_rate=48000, audio_length=5.970666667):
+    def __init__(self, dataset_rootdir, metadata_filepath, sample_rate=48000, audio_duration=5.970666667):
         self.dataset_rootdir = dataset_rootdir
         self.metadata = pd.read_csv(metadata_filepath)
         self.sample_rate = sample_rate
-        self.audio_length = audio_length
+        self.audio_duration = audio_duration
 
         
     def __len__(self):
@@ -36,8 +36,8 @@ class AudioDataset(Dataset):
         noisy_audio_file = os.path.join(self.dataset_rootdir, "noisy", noisy_filename)
         clean_audio_file = os.path.join(self.dataset_rootdir, "clean", clean_filename)
         
-        noisy_waveform, _ = librosa.load(noisy_audio_file, sr=self.sample_rate, duration=self.audio_length)
-        clean_waveform, _ = librosa.load(clean_audio_file, sr=self.sample_rate, duration=self.audio_length)
+        noisy_waveform, _ = librosa.load(noisy_audio_file, sr=self.sample_rate, duration=self.audio_duration)
+        clean_waveform, _ = librosa.load(clean_audio_file, sr=self.sample_rate, duration=self.audio_duration)
         
         noisy_waveform_padded = self.pad_audio(noisy_waveform)
         clean_waveform_padded = self.pad_audio(clean_waveform)
@@ -50,7 +50,7 @@ class AudioDataset(Dataset):
     
     def pad_audio(self, waveform):
         waveform_len = len(waveform)
-        desired_len = int(self.sample_rate * self.audio_length)
+        desired_len = int(self.sample_rate * self.audio_duration)
         if waveform_len < desired_len:
             num_samples = desired_len - waveform_len
             waveform = np.pad(waveform, (0, num_samples))
@@ -85,6 +85,19 @@ def get_data_path(dataset_name, data_dir):
 
     return paths
 
+
+def calc_frames_num(signal_length, window_size=512, hop_length=128):
+    return 5 + ((signal_length - window_size) // hop_length)
+
+
+def adjust_signal_length(sample_rate, desired_audio_duration=6, window_size=512, hop_length=128):
+    """Adjust signal length to be exactly divisible by 8."""
+    signal_length = sample_rate * desired_audio_duration
+    frames_num = calc_frames_num(signal_length, window_size, hop_length)
+    if frames_num % 8 != 0:
+        frames_num = round(frames_num / 8) * 8
+
+    return int(np.floor(((frames_num - 1) * hop_length) + window_size - (4 * hop_length)))
 
 
 def save_model(model, optimizer, state, path):

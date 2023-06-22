@@ -11,7 +11,7 @@ from torch.optim import Adam
 from tqdm import tqdm
 
 from model import MIMO_UNet_Beamforming
-from utils import load_model, save_model, AudioDataset, get_data_path
+from utils import load_model, save_model, AudioDataset, get_data_path, adjust_signal_length
 
 '''
 Train our baseline model for the Task1 of the L3DAS22 challenge.
@@ -61,10 +61,14 @@ def main(args):
     
     paths = get_data_path(args.dataset_name, args.data_dir)
     dataset_rootdir, tr_metadata_filepath, val_metadata_filepath, test_metadata_filepath = paths
+
+    signal_length = adjust_signal_length(sample_rate=args.sr, desired_audio_duration=args.audio_dur, window_size=args.fft_size, hop_length=args.hop_size)
+    audio_duration = signal_length / args.sr
+
     # Build dataset
-    tr_dataset = AudioDataset(dataset_rootdir, tr_metadata_filepath, sample_rate=args.sr)
-    val_dataset = AudioDataset(dataset_rootdir, val_metadata_filepath, sample_rate=args.sr)
-    test_dataset = AudioDataset(dataset_rootdir, test_metadata_filepath, sample_rate=args.sr)
+    tr_dataset = AudioDataset(dataset_rootdir, tr_metadata_filepath, sample_rate=args.sr, audio_duration=audio_duration)
+    val_dataset = AudioDataset(dataset_rootdir, val_metadata_filepath, sample_rate=args.sr, audio_duration=audio_duration)
+    test_dataset = AudioDataset(dataset_rootdir, test_metadata_filepath, sample_rate=args.sr, audio_duration=audio_duration)
     # Build data loader from dataset
     tr_data = utils.DataLoader(tr_dataset, args.batch_size, shuffle=True, pin_memory=True)
     val_data = utils.DataLoader(val_dataset, args.batch_size, shuffle=False, pin_memory=True)
@@ -206,10 +210,12 @@ if __name__ == '__main__':
     parser.add_argument('--load_model', type=str, default=None,
                         help='Reload a previously trained model (whole task model)')
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=4,
+    parser.add_argument('--batch_size', type=int, default=12,
                         help="Batch size")
-    parser.add_argument('--sr', type=int, default=48_000,
+    parser.add_argument('--sr', type=int, default=16_000,
                         help="Sampling rate")
+    parser.add_argument('--audio_dur', type=int, default=6,
+                        help="Desired audio duration in seconds")
     parser.add_argument('--patience', type=int, default=50,
                         help="Patience for early stopping on validation set")
     parser.add_argument('--loss', type=str, default="L1",

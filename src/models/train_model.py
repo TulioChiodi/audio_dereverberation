@@ -115,6 +115,7 @@ def main(args):
     print('TRAINING START')
     train_loss_hist = []
     val_loss_hist = []
+    epochs_hist = []
     epoch = 1
     while state["worse_epochs"] < args.patience:
         print("Training epoch " + str(epoch))
@@ -167,7 +168,16 @@ def main(args):
             #state["worse_epochs"] = 200
             train_loss_hist.append(train_loss.cpu().detach().numpy())
             val_loss_hist.append(val_loss.cpu().detach().numpy())
+            epochs_hist.append(epoch)
+            epoch_results = {
+                'epoch': epochs_hist,
+                'train_loss': train_loss_hist,
+                'val_loss': val_loss_hist,
+            }
+            out_path = os.path.join(args.results_path, 'epoch_results.npy')
+            np.save(out_path, epoch_results)
             epoch += 1
+
     #LOAD BEST MODEL AND COMPUTE LOSS FOR ALL SETS
     print("TESTING")
     # Load best model based on validation loss
